@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Two player game - state channel</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+
+    <link href='https://programtheblockchain.com/tachyons.min.css' rel='stylesheet' type="text/css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:100,300,300i,700,700i" rel="stylesheet">
+    <link href='https://programtheblockchain.com/icons/css/icons.css' rel='stylesheet' type="text/css" />
+
+    <style>
+      figure img {
+        display: block;
+        margin: 0 auto;
+      }
+      pre, .pre  {
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      code {
+        font-family: inconsolata, Menlo, Monaco, Consolas, "Courier New", monospace;
+      }
+
+      code {
+        padding: 0.2em;
+        font-size: 85%;
+        background-color: rgba(27,31,35,.05);
+        border-radius: 3px;
+      }
+
+      pre code {
+        background-color: transparent;
+        display: block;
+        padding: 1.5em;
+        white-space: pre;
+        font-size: .875rem;
+        line-height: 1.25;
+      }
+
+      pre {
+        white-space: pre;
+
+        hyphens: none;
+        position: relative;
+      }
+
+      blockquote {
+        margin-top: 0;
+        margin-left: 0;
+        padding-left: 2rem;
+        color: rgba(0, 0, 0, 0.9);
+        font-family: athelas, georgia, serif;
+        border-width: 0.25rem;
+        border-color: #357edd;
+        border-left-style: solid;
+      }
+
+      cite {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-style: normal;
+      }
+
+      aside {
+        position: absolute;
+        width: 180px;
+        right: -186px;
+        font-size: 14px;
+        border-left: 1px solid #ccc;
+        padding-left: 16px;
+      }
+
+      @media (min-width: 960px) {
+        .article-container.has-footnotes {
+          margin-left: -120px;
+          position: relative;
+        }
+        .footnotes, .footnote-ref {
+          display: none;
+        }
+      }
+
+      @media (max-width: 960px) {
+        aside {
+          display: none;
+        }
+      }
+
+      .footnote-ref a, a.footnote-return {
+        text-decoration: none;
+      }
+
+       
+      .mc-banner {
+        visibility: hidden !important;
+      }
+      .mc-modal, .mc-modal-bg {
+        visibility: visible !important;
+      }
+
+      strong {
+        font-weight: 700;
+      }
+
+      .sans-serif {
+        font-family: Lato, sans-serif;
+      }
+    </style>
+
+    <meta property="og:title" content="Twenty-One State Channel" />
+<meta property="og:description" content="[v-cloak] { display: none; }  Current number: {{ num &#43; pendingMove }} Game over. You won!You lost.  Waiting for opponent&#39;s move... Start timeout Timer against opponent: {{ timeLeft }}
+Claim timeout   Your move: &#43;{{ n }}  Timer against you: {{ timeLeft }}
+Send move to smart contract   Waiting for opponent to join...
+Contract address: {{ contract.address }}
+Cancel game  Game canceled." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://programtheblockchain.com/dapps/twentyone/" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <meta property="og:image" content="https://programtheblockchain.com/images/bigicon.png" />
+    
+<meta itemprop="name" content="Twenty-One State Channel">
+<meta itemprop="description" content="[v-cloak] { display: none; }  Current number: {{ num &#43; pendingMove }} Game over. You won!You lost.  Waiting for opponent&#39;s move... Start timeout Timer against opponent: {{ timeLeft }}
+Claim timeout   Your move: &#43;{{ n }}  Timer against you: {{ timeLeft }}
+Send move to smart contract   Waiting for opponent to join...
+Contract address: {{ contract.address }}
+Cancel game  Game canceled.">
+
+
+
+<meta itemprop="wordCount" content="1108">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://programtheblockchain.com/images/bigicon.png"/>
+
+<meta name="twitter:title" content="Twenty-One State Channel"/>
+<meta name="twitter:description" content="[v-cloak] { display: none; }  Current number: {{ num &#43; pendingMove }} Game over. You won!You lost.  Waiting for opponent&#39;s move... Start timeout Timer against opponent: {{ timeLeft }}
+Claim timeout   Your move: &#43;{{ n }}  Timer against you: {{ timeLeft }}
+Send move to smart contract   Waiting for opponent to join...
+Contract address: {{ contract.address }}
+Cancel game  Game canceled."/>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-109050146-1"></script>
+    <script>
+      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        console.log("Not running Google Analytics on localhost.");
+      } else {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-109050146-1');
+      }
+    </script>
+    
+    <script src='https://programtheblockchain.com/js/jquery-3.2.1.min.js'></script>
+  </head>
+
+  <body class="w-100 sans-serif bg-white">
+    <nav class="db dt-l w-100 border-box pa3 ph5-l b--black-10 bb" style="min-height:74px">
+	
+	<a class="db dtc-l v-mid black link w-100 w-25-l tc tl-l mb2 mb0-l" href='https://programtheblockchain.com/' title="Home">
+		<img src="https://programtheblockchain.com/images/ptb.png" alt="Program the Blockchain">
+	</a>
+	
+	<div class="db dtc-l v-mid w-100 w-75-l tc tr-l fw1">
+		<a class="link dim black f6 f5-l dib mr3 mr4-l" href="https://programtheblockchain.com/posts" title="Archive">Archive</a>
+		<a class="link dim black f6 f5-l dib mr3 mr4-l" href="https://programtheblockchain.com/about" title="About">About</a>
+		<a class="link dim black f6 f5-l dib" href="#" title="Subscribe" id="header-subscribe">Subscribe</a>
+	</div>
+</nav>
+
+
+    <main class="mw7 center" role="main">
+      
+<script src='https://programtheblockchain.com/js/web3.min.js'></script>
+<script src='https://programtheblockchain.com/js/ethereumjs-all-2018-1-17.min.js'></script>
+<script src='https://programtheblockchain.com/js/moment.min.js'></script>
+
+<div class='flex-l mt2 w8 center article-container'>
+<article class="cf pv5 ph3 ph4-ns w-100">
+  <header>
+    <h1 class="f1 mb1">
+      Twenty-One State Channel
+    </h1>
+  </header>
+  <div class="lh-copy fw3 f4 dark-gray">
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.20.3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+
+<style>
+  [v-cloak] { display: none; }
+</style>
+
+<div v-cloak id="app" class="mt5">
+  <div v-if="opponent">
+    <span class="db f1">Current number: {{ num + pendingMove }}</span>
+    <div v-if="gameOver">
+      Game over. <span v-if="whoseTurn === opponent">You won!</span><span v-else>You lost.</span>
+    </div>
+    <div v-else-if="whoseTurn !== account">
+      <p class="mv2 f3 i">
+        Waiting for opponent's move...
+      </p>
+      <div v-if="latePlayer === null" @click="moveAndStartTimeout" class="f6 link pointer dim ph3 pv2 mb2 dib white bg-orange" style="user-select:none">Start timeout</div>
+      <div v-else-if="latePlayer === opponent">
+        <p>Timer against opponent: {{ timeLeft }}</p>
+        <div v-if="timeLeft === 'EXPIRED'" @click="claimTimeout" class="f6 link pointer dim ph3 pv2 mb2 dib white bg-orange" style="user-select:none">Claim timeout</div>
+      </div>
+    </div>
+    <div class="mv2 f3" v-else>
+      <span class="i">Your move:</span>
+      <div v-for="n in (21 - num < 3 ? 21 - num : 3)" @click="move(n)" class="link pointer dim mh2 mb2 dib white b bg-orange tc" style="user-select:none; width: 60px; height: 60px; line-height: 60px;">+{{ n }}</div>
+    </div>
+    <div class="mv2 f3" v-if="latePlayer === account">
+      <p>Timer against you: {{ timeLeft }}</p>
+      <div v-if="pendingMove" @click="move(pendingMove)" class="f6 link pointer dim ph3 pv2 mb2 dib white bg-orange" style="user-select:none">Send move to smart contract</div>
+    </div>
+  </div>
+
+  <div v-else-if="contract">
+    <div v-if="contract.address">
+      <div v-if="!gameOver">
+        <p>Waiting for opponent to join...</p>
+        <p>Contract address: <code>{{ contract.address }}</code></p>
+        <div @click="cancelGame" class="f6 link pointer dim ph3 pv2 mb2 dib white bg-orange" style="user-select:none">Cancel game</div>
+      </div>
+      <div v-else>
+        <p>Game canceled.</p>
+      </div>
+    </div>
+    <div v-else>
+      <p>Deploying...</p>
+    </div>
+  </div>
+
+  <div v-else class="cf">
+    <div class="measure">
+      <div class="fl">
+        <label for="startGame" class="f6 b db mb2">Start a new game</label>
+        <div class="f6 link pointer dim ph3 pv2 mb2 dib white bg-green" id="startGame" @click="start" style="user-select:none">Deploy contract</div>
+        <em class="ph4">or</em>
+      </div>
+      <div class="fl">
+        <label for="gameAddress" class="f6 b db mb2">Join an existing game</label>
+        <input id="gameAddress" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text" aria-describedby="gameAddress-desc" ref="address">
+        <small id="gameAddress-desc" class="f6 black-60 db mb2">Enter the address of an already-deployed game contract</small>
+        <div class="f6 link pointer dim ph3 pv2 mb2 dib white bg-blue" @click="join" href="#" style="user-select:none">Join this game</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+var bytecode = "60806040527fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff60065560405160208061176783398101806040528101908080519060200190929190505050336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055503460028190555080600581905550506116bf806100a86000396000f3006080604052600436106100c5576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680630e1da6c3146100ca5780630e76f9db146100e157806359a5f12d1461010c578063701bd9851461016357806370dea79a146101a05780637a455894146101cb578063b688a363146101e2578063bdb337d1146101ec578063c19d93fb1461021b578063ceec2c901461028c578063d24257c01461031c578063d30895e414610347578063ea8a1af01461039e575b600080fd5b3480156100d657600080fd5b506100df6103b5565b005b3480156100ed57600080fd5b506100f66104f3565b6040518082815260200191505060405180910390f35b34801561011857600080fd5b506101216104f9565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561016f57600080fd5b5061019e600480360381019080803560ff169060200190929190803560ff16906020019092919050505061051f565b005b3480156101ac57600080fd5b506101b5610a2c565b6040518082815260200191505060405180910390f35b3480156101d757600080fd5b506101e0610a32565b005b6101ea610be6565b005b3480156101f857600080fd5b50610201610e68565b604051808215151515815260200191505060405180910390f35b34801561022757600080fd5b50610230610e7b565b604051808460ff1660ff1681526020018360ff1660ff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001935050505060405180910390f35b34801561029857600080fd5b5061031a600480360381019080803560ff169060200190929190803560ff169060200190929190803590602001908201803590602001908080601f0160208091040260200160405190810160405280939291908181526020018383808284378201915050505050509192919290803560ff169060200190929190505050610ecd565b005b34801561032857600080fd5b5061033161111c565b6040518082815260200191505060405180910390f35b34801561035357600080fd5b5061035c611122565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156103aa57600080fd5b506103b3611147565b005b600360009054906101000a900460ff1615151561043a576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252600f8152602001807f47616d652068617320656e6465642e000000000000000000000000000000000081525060200191505060405180910390fd5b600654421015151561044b57600080fd5b6001600360006101000a81548160ff021916908315150217905550610494600460000160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff16611336565b73ffffffffffffffffffffffffffffffffffffffff166108fc3073ffffffffffffffffffffffffffffffffffffffff16319081150290604051600060405180830381858888f193505050501580156104f0573d6000803e3d6000fd5b50565b60055481565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600360009054906101000a900460ff161515156105a4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252600f8152602001807f47616d652068617320656e6465642e000000000000000000000000000000000081525060200191505060405180910390fd5b600460000160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561066c576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252600e8152602001807f4e6f7420796f7572207475726e2e00000000000000000000000000000000000081525060200191505060405180910390fd5b60018160ff1610158015610684575060038160ff1611155b151561071e576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602b8152602001807f4d6f7665206f7574206f662072616e67652e204d75737420626520626574776581526020017f656e203120616e6420332e00000000000000000000000000000000000000000081525060400191505060405180910390fd5b601581600460000160019054906101000a900460ff160160ff16111515156107ae576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260158152602001807f4d6f766520776f756c64206578636565642032312e000000000000000000000081525060200191505060405180910390fd5b8160ff16600460000160009054906101000a900460ff1660ff1614151561083d576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252601a8152602001807f496e636f72726563742073657175656e6365206e756d6265722e00000000000081525060200191505060405180910390fd5b80600460000160018282829054906101000a900460ff160192506101000a81548160ff021916908360ff16021790555061087633611336565b600460000160026101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506001600460000160008282829054906101000a900460ff160192506101000a81548160ff021916908360ff1602179055507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6006819055506015600460000160019054906101000a900460ff1660ff1614156109a9576001600360006101000a81548160ff0219169083151502179055503373ffffffffffffffffffffffffffffffffffffffff166108fc3073ffffffffffffffffffffffffffffffffffffffff16319081150290604051600060405180830381858888f193505050501580156109a7573d6000803e3d6000fd5b505b7f10ac166a969b6ae9b140c9d6b88c6c4e565e4fc22f858bf92f1542535f0f161a338383604051808473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018360ff1660ff1681526020018260ff1660ff168152602001935050505060405180910390a15050565b60065481565b600360009054906101000a900460ff16151515610ab7576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252600f8152602001807f47616d652068617320656e6465642e000000000000000000000000000000000081525060200191505060405180910390fd5b610ac033611336565b73ffffffffffffffffffffffffffffffffffffffff16600460000160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141515610bad576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260238152602001807f43616e6e6f7420737461727420612074696d656f7574206f6e20796f7572736581526020017f6c662e000000000000000000000000000000000000000000000000000000000081525060400191505060405180910390fd5b60055442016006819055507f02bdd5174ce27e71542ca96bbba5c2c21920793759d94795d2f17eff6f7f2a0f60405160405180910390a1565b6000600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141515610c96576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260198152602001807f47616d652068617320616c726561647920737461727465642e0000000000000081525060200191505060405180910390fd5b600360009054906101000a900460ff16151515610d1b576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260128152602001807f47616d65207761732063616e63656c65642e000000000000000000000000000081525060200191505060405180910390fd5b60025434141515610d94576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260118152602001807f57726f6e672062657420616d6f756e742e00000000000000000000000000000081525060200191505060405180910390fd5b33600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff16600460000160026101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055507f762f260439bb4be3ef6e4dc2786e2e7bd187d3d80b79057d7a424fe98563e33560405160405180910390a1565b600360009054906101000a900460ff1681565b60048060000160009054906101000a900460ff16908060000160019054906101000a900460ff16908060000160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff16905083565b6000600460000160009054906101000a900460ff1660ff168560ff1610151515610f85576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260248152602001807f53657175656e6365206e756d6265722063616e6e6f7420676f206261636b776181526020017f7264732e0000000000000000000000000000000000000000000000000000000081525060400191505060405180910390fd5b61103e308686604051808473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166c010000000000000000000000000281526014018360ff1660ff167f01000000000000000000000000000000000000000000000000000000000000000281526001018260ff1660ff167f010000000000000000000000000000000000000000000000000000000000000002815260010193505050506040518091039020611559565b905061104933611336565b73ffffffffffffffffffffffffffffffffffffffff1661106982856115a8565b73ffffffffffffffffffffffffffffffffffffffff1614151561108b57600080fd5b84600460000160006101000a81548160ff021916908360ff16021790555083600460000160016101000a81548160ff021916908360ff16021790555033600460000160026101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550611115858361051f565b5050505050565b60025481565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561120b576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252601d8152602001807f4f6e6c7920666972737420706c61796572206d61792063616e63656c2e00000081525060200191505060405180910390fd5b6000600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff161415156112bb576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260198152602001807f47616d652068617320616c726561647920737461727465642e0000000000000081525060200191505060405180910390fd5b6001600360006101000a81548160ff0219169083151502179055503373ffffffffffffffffffffffffffffffffffffffff166108fc3073ffffffffffffffffffffffffffffffffffffffff16319081150290604051600060405180830381858888f19350505050158015611333573d6000803e3d6000fd5b50565b600080600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141515156113e8576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260158152602001807f47616d6520686173206e6f7420737461727465642e000000000000000000000081525060200191505060405180910390fd5b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff16141561146757600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff169050611554565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff1614156114e6576000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff169050611554565b6040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252600f8152602001807f496e76616c696420706c617965722e000000000000000000000000000000000081525060200191505060405180910390fd5b919050565b60008160405180807f19457468657265756d205369676e6564204d6573736167653a0a333200000000815250601c01826000191660001916815260200191505060405180910390209050919050565b6000806000806115b78561164f565b809350819450829550505050600186848484604051600081526020016040526040518085600019166000191681526020018460ff1660ff1681526020018360001916600019168152602001826000191660001916815260200194505050505060206040516020810390808403906000865af115801561163a573d6000803e3d6000fd5b50505060206040510351935050505092915050565b6000806000806000806041875114151561166857600080fd5b6020870151925060408701519150606087015160001a905080838395509550955050505091939092505600a165627a7a72305820a5e069ea8bdbec49b12da4b1ae49c532a216999766be0f1ba829884c175bb1050029";
+var abi = [{"constant":false,"inputs":[],"name":"claimTimeout","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"timeoutInterval","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"player2","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"seq","type":"uint8"},{"name":"value","type":"uint8"}],"name":"move","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"timeout","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"startTimeout","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"join","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[],"name":"gameOver","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"name":"seq","type":"uint8"},{"name":"num","type":"uint8"},{"name":"whoseTurn","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"seq","type":"uint8"},{"name":"num","type":"uint8"},{"name":"sig","type":"bytes"},{"name":"value","type":"uint8"}],"name":"moveFromState","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"betAmount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"player1","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"cancel","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[{"name":"_timeoutInterval","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"GameStarted","type":"event"},{"anonymous":false,"inputs":[],"name":"TimeoutStarted","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"player","type":"address"},{"indexed":false,"name":"seq","type":"uint8"},{"indexed":false,"name":"value","type":"uint8"}],"name":"MoveMade","type":"event"}];
+
+var TwentyOneContract;
+
+var maxuint = web3.toBigNumber(2).pow(256).sub(1);
+
+$(function () {
+  var pubnub = new PubNub({
+    publishKey: 'pub-c-f347a3c1-0c3c-488e-a0c2-e5e061236a50',
+    subscribeKey: 'sub-c-2e9c92fc-57a0-11e8-aac2-e2d70733f5dd',
+  });
+
+  function prefixed(hash) {
+    return ethereumjs.ABI.soliditySHA3(
+      ["string", "bytes32"],
+      ["\x19Ethereum Signed Message:\n32", hash]
+    );
+  }
+
+  function recoverSigner(message, signature) {
+    var split = ethereumjs.Util.fromRpcSig(signature);
+    var publicKey = ethereumjs.Util.ecrecover(message, split.v, split.r, split.s);
+    var signer = "0x" + ethereumjs.Util.pubToAddress(publicKey).toString("hex");
+    return signer;
+  }
+
+  window.app = new Vue({
+    el: '#app',
+    data: {
+      account: web3.eth.defaultAccount,
+      contract: null,
+      opponent: null,
+      gameOver: false,
+      seq: 0,
+      num: 0,
+      whoseTurn: null,
+      pendingMove: null,
+      signature: null,
+      timeout: null,
+      latePlayer: null,
+      timeLeft: null,
+    },
+    mounted: function () {
+      if (localStorage.twentyoneaddress) {
+        this.$refs.address.value = localStorage.twentyoneaddress;
+      }
+    },
+    methods: {
+      stateHash: function (seq, number) {
+        return "0x" + ethereumjs.ABI.soliditySHA3(
+          ["address", "uint8", "uint8"],
+          [this.contract.address, seq, number],
+        ).toString("hex");
+      },
+      updateIfValid: function (move, signature) {
+        if (this.whoseTurn !== this.opponent) return;
+        if (move < 1 || move > 3) return;
+
+        var num = this.num;
+        var seq = this.seq;
+
+        // First apply our pending move.
+        if (this.pendingMove) {
+          seq += 1;
+          num += this.pendingMove;
+        }
+
+        seq += 1;
+        num += move;
+
+        if (num > 21) return;
+        var message = prefixed(this.stateHash(seq, num));
+        var signer = recoverSigner(message, signature);
+        if (signer !== this.opponent.toLowerCase()) return;
+
+        this.seq = seq;
+        this.num = num;
+        this.whoseTurn = this.account;
+        this.pendingMove = null;
+        this.signature = signature;
+      },
+      cancelGame: function () {
+        var that = this;
+
+        this.contract.cancel(function (err, hash) {
+          if (err) return error(err);
+
+          waitForReceipt(hash, function (receipt) {
+            if (receipt.status === "0x01") {
+              log("Game canceled.");
+              that.fetchContractState();
+            }
+          });
+        });
+      },
+      fetchContractState: function () {
+        var that = this;
+
+        // Fetch the state from the contract.
+        this.contract.state(function (err, state) {
+          if (err) return error(err);
+
+          var seq = state[0].toNumber();
+          var num = state[1].toNumber();
+          var whoseTurn = state[2];
+
+          // Only update if the sequence number has increased.
+          if (seq > that.seq) {
+            that.seq = seq;
+            that.num = num;
+            that.whoseTurn = whoseTurn;
+            that.pendingMove = null;
+            that.signature = null;
+          }
+
+          // Fetch the timeout status from the contract.
+          that.contract.timeout(function (err, timeout) {
+            if (err) return error(err);
+
+            if (timeout.equals(maxuint)) {
+              // A value of 2^256-1 indicates no timeout.
+              that.timeout = null;
+              that.latePlayer = null;
+            } else {
+              that.timeout = timeout.toNumber();
+              that.latePlayer = whoseTurn;
+            }
+          });
+
+          // Check whether the game is over.
+          that.contract.gameOver(function (err, gameOver) {
+            if (err) return error(err);
+
+            that.gameOver = gameOver;
+          });
+        });
+      },
+      moveAndStartTimeout: function () {
+        var that = this;
+
+        function startTimeout() {
+          that.contract.startTimeout(function (err, hash) {
+            if (err) return error(err);
+
+            waitForReceipt(hash, function (receipt) {
+              if (receipt.status === "0x01") {
+                log("Timeout started.");
+              } else {
+                log("Transaction failed.");
+              }
+            });
+
+            that.fetchContractState();
+          });
+        }
+
+        if (this.pendingMove) {
+          log("Making latest move on-chain...");
+          this.contractMove(this.pendingMove, startTimeout);
+        } else {
+          startTimeout();
+        }
+      },
+      claimTimeout: function () {
+        var that = this;
+
+        this.contract.claimTimeout(function (err, hash) {
+          if (err) return error(err);
+
+          waitForReceipt(hash, function (receipt) {
+            if (receipt.status === "0x01") {
+              log("Timeout claimed.");
+            } else {
+              log("Transaction failed.");
+            }
+            that.fetchContractState();
+          });
+        });
+      },
+      subscribe: function () {
+        var that = this;
+        this.contract.allEvents(function (err, event) {
+          that.fetchContractState();
+        });
+
+        pubnub.subscribe({
+          channels: ['21-' + this.contract.address],
+        });
+      },
+      contractMove: function (n, cb) {
+        var that = this;
+
+        function callback(err, hash) {
+          if (err) return error(err);
+
+          waitForReceipt(hash, function (receipt) {
+            if (receipt.status === "0x01") {
+              log("Move made.");
+              if (cb) {
+                cb();
+              }
+              that.fetchContractState();
+            } else {
+              error("Failed to submit move.");
+            }
+          });
+        }
+
+        if (this.signature) {
+          this.contract.moveFromState(this.seq, this.num, this.signature, n,
+            callback);
+        } else {
+          this.contract.move(this.seq, n, callback);
+        }
+      },
+      move: function (n) {
+        var that = this;
+
+        var message = this.stateHash(this.seq + 1, this.num + n);
+
+        if (this.num + n === 21 || this.latePlayer === this.account) {
+          // Send move to the contract if it's the winning move or there's a
+          // timer running against us.
+          this.contractMove(n);
+        } else {
+          // Otherwise send a signed message to our opponent.
+          web3.personal.sign(
+            message,
+            web3.eth.defaultAccount,
+            function (err, signature) {
+              if (err) return error(err);
+
+              pubnub.publish({
+                channel: '21-' + that.contract.address,
+                message: {
+                  move: n,
+                  signature: signature,
+                },
+              });
+
+              that.whoseTurn = that.opponent;
+              that.pendingMove = n;
+            });
+        }
+      },
+      join: function () {
+        var address = this.$refs.address.value;
+
+        // Remember the address so we can auto-fill if the user closes the
+        // page and reopens it.
+        localStorage.twentyoneaddress = address;
+
+        var that = this;
+        var contract = TwentyOneContract.at(address);
+
+        // Fetch player 1.
+        contract.player1(function (err, player1) {
+          // Fetch player 2.
+          contract.player2(function (err, player2) {
+            if (that.account === player1) {
+              // If we're player 1:
+              if (!web3.toBigNumber(player2).isZero()) {
+                // If there's already a player 2:
+                that.whoseTurn = that.account;
+                that.opponent = player2;
+              }
+
+              that.contract = contract;
+              that.fetchContractState();
+              that.subscribe();
+            } else if (that.account === player2) {
+              // If we're player 2
+              that.opponent = player1;
+              that.whoseTurn = player1;
+              that.contract = contract;
+              that.fetchContractState();
+              that.subscribe();
+            } else {
+              // If we're neither player, let's try to join.
+              contract.join({ value: web3.toWei(0.01, "ether") }, function (err, hash) {
+                if (err) return error(err);
+
+                waitForReceipt(hash, function (receipt) {
+                  if (receipt.status === "0x01") {
+                    log("Game joined.");
+                    that.contract = contract;
+                    that.opponent = player1;
+                    that.whoseTurn = player1;
+                    that.subscribe();
+                  }
+                });
+              });
+            }
+          });
+        });
+      },
+      start: function () {
+        var that = this;
+
+        // Deploy the contract, using a 10-minute timeout interval and a 0.01
+        // ether wager.
+        TwentyOneContract.new(600, {
+          data: bytecode,
+          gas: 2000000,
+          value: web3.toWei(0.01, "ether"),
+        }, function (err, contract) {
+
+          if (err) return error(err);
+          that.contract = contract;
+
+          // Once the contract has been deployed...
+          if (contract.address) {
+            // Subscribe to messages and events.
+            that.subscribe();
+
+            log("Deployment succeeded. Contract address: " + contract.address);
+
+            // Remember the address so we can auto-fill if the user closes the
+            // page and reopens it.
+            localStorage.twentyoneaddress = contract.address;
+
+            // Listen for when the game is started.
+            that.contract.GameStarted(function () {
+              that.contract.player2(function (err, opponent) {
+                // Update our local state to reflect our opponent's address and
+                // the fact that it's our turn.
+                that.opponent = opponent;
+                that.whoseTurn = that.account;
+              });
+            });
+          } else {
+            log("Deploying contract. Transaction hash: " + contract.transactionHash);
+          }
+        });
+      },
+    },
+  });
+
+  window.setInterval(function () {
+    if (app.latePlayer !== null) {
+      var left = app.timeout * 1000 - new Date();
+      if (left > 0) {
+        app.timeLeft = moment(left).format("mm:ss");
+      } else {
+        app.timeLeft = "EXPIRED";
+      }
+    } else {
+      app.timeLeft = null;
+    }
+  }, 1000);
+
+  pubnub.addListener({
+    message: function (msg) {
+      app.updateIfValid(msg.message.move, msg.message.signature);
+    },
+  });
+
+  if (typeof(web3) === "undefined") {
+    error("Unable to find web3. " +
+    "Please run MetaMask (or something else that injects web3).");
+  } else {
+    log("Found injected web3.");
+    web3 = new Web3(web3.currentProvider);
+    TwentyOneContract = web3.eth.contract(abi);
+  }
+});
+
+</script>
+
+  </div>
+</article>
+</div>
+
+<h2>Log</h2>
+<div class="code f6 lh-solid overflow-auto ph3 ba b--moon-gray" style="height:16em" id="log">
+</div>
+<script>
+	function log(message) {
+		$('#log').append($('<p>').text(message));
+		$('#log').scrollTop($('#log').prop('scrollHeight'));
+	}
+
+	function error(message) {
+		$('#log').append($('<p>').addClass('dark-red').text(message));
+		$('#log').scrollTop($('#log').prop('scrollHeight'));
+	}
+
+	function waitForReceipt(hash, cb) {
+		web3.eth.getTransactionReceipt(hash, function (err, receipt) {
+			if (err) {
+				error(err);
+			}
+
+			if (receipt !== null) {
+				
+				if (cb) {
+					cb(receipt);
+				}
+			} else {
+				
+				window.setTimeout(function () {
+					waitForReceipt(hash, cb);
+				}, 1000);
+			}
+		});
+	}
+</script>
+
+    </main>
+    <footer class="pv4 ph3 ph5-ns tc">
+	<a class="link dim gray dib h2 w2 br-100 mr3" href="#" title="Subscribe via email" id="footer-subscribe">
+		<svg data-icon="email" viewBox="0 0 512 512" style="fill:currentcolor">
+			<title>Email icon</title>
+			<path d="M101.3 141.6v228.9h0.3 308.4 0.8V141.6H101.3zM375.7 167.8l-119.7 91.5 -119.6-91.5H375.7zM127.6 194.1l64.1 49.1 -64.1 64.1V194.1zM127.8 344.2l84.9-84.9 43.2 33.1 43-32.9 84.7 84.7L127.8 344.2 127.8 344.2zM384.4 307.8l-64.4-64.4 64.4-49.3V307.8z"/>
+		</svg>
+	</a>
+	<a class="link dim gray dib h2 w2 br-100 mr3" href="https://programtheblockchain.com/rss.xml" title="RSS feed">
+		<svg data-icon="rss" viewBox="0 0 512 512" style="fill:currentcolor">
+			<title>RSS icon</title>
+			<path d="M201.8 347.2c0 20.3-16.5 36.8-36.8 36.8 -20.3 0-36.8-16.5-36.8-36.8s16.5-36.8 36.8-36.8C185.3 310.4 201.8 326.8 201.8 347.2zM128.2 204.7v54.5c68.5 0.7 124 56.3 124.7 124.7h54.5C306.7 285.3 226.9 205.4 128.2 204.7zM128.2 166.6c57.9 0.3 112.3 22.9 153.2 63.9 41 41 63.7 95.5 63.9 153.5h54.5c-0.3-149.9-121.7-271.4-271.6-271.9V166.6L128.2 166.6z"/>
+		</svg>
+	</a>
+	<a class="link dim gray dib h2 w2 br-100 mr3" href="https://twitter.com/ProgramTheBlock" title="Twitter">
+		<svg data-icon="twitter" viewBox="0 0 32 32" style="fill:currentcolor">
+			<title>Twitter icon</title>
+			<path d="M2 4 C6 8 10 12 15 11 A6 6 0 0 1 22 4 A6 6 0 0 1 26 6 A8 8 0 0 0 31 4 A8 8 0 0 1 28 8 A8 8 0 0 0 32 7 A8 8 0 0 1 28 11 A18 18 0 0 1 10 30 A18 18 0 0 1 0 27 A12 12 0 0 0 8 24 A8 8 0 0 1 3 20 A8 8 0 0 0 6 19.5 A8 8 0 0 1 0 12 A8 8 0 0 0 3 13 A8 8 0 0 1 2 4"></path>
+		</svg>
+	</a>
+</footer>
+
+    
+<script type="text/javascript" src="//downloads.mailchimp.com/js/signup-forms/popup/embed.js" data-dojo-config="usePlainJson: true, isDebug: false">
+</script>
+<script type="text/javascript">
+	function showSubscribeModal(e) {
+		e.preventDefault();
+		document.cookie = 'MCPopupClosed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+		document.cookie = 'MCPopupSubscribed=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+		require(["mojo/signup-forms/Loader"], function(L) {
+			L.start({"baseUrl":"mc.us17.list-manage.com","uuid":"7f92ce5fb34212b812549be4b","lid":"be1cac3765"});
+		});		
+	}
+	document.getElementById('header-subscribe').addEventListener('click', showSubscribeModal);
+	document.getElementById('footer-subscribe').addEventListener('click', showSubscribeModal);
+</script>
+
+
+<script>
+	$(function () {
+		$('.footnotes li').each(function (i, el) {
+			var html = $(el).html().replace(/\s*<a class="footnote-return"[^>]*>↩<\/a>$/, "");
+			$('<aside>').html(html).insertBefore($('sup#fnref\\:' + (i + 1)).parent('p,li'));
+		});
+		$('a.expand').click(function (e) {
+			e.preventDefault();
+			$(this).toggleClass('icon-up').toggleClass('icon-down').blur().parent('div').next('.expandable').toggle();
+		});
+	});
+</script>
+
+  </body>
+</html>
